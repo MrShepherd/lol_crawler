@@ -14,7 +14,7 @@ class GameIDInfoCrawler(object):
     def __init__(self):
         self.browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs')
         # self.browser = webdriver.Chrome()
-        self.browser.set_page_load_timeout(8)
+        self.browser.set_page_load_timeout(10)
         self.url = 'http://www.op.gg/ranking/ladder/'
         self.page_urls = []
         self.pages = []
