@@ -11,6 +11,7 @@ if __name__ == '__main__':
     # crawler.close()
     crawler = gameid_info_crawler.GameIDInfoCrawler()
     crawler.page_collector()
+    crawler.page_generator()
     # print(crawler.craw_gameid_info())
     crawler.close()
     print('end')
