@@ -62,14 +62,13 @@ class GameIDInfoCrawler(object):
                 self.browser.execute_script('window.stop()')
             # time.sleep(2)
             self.browser.find_element_by_xpath('//div[@class="Buttons"]/button[contains(text(),"Check MMR")]').click()
-            WebDriverWait(self.browser, 30).until(EC.presence_of_element_located((By.ID, 'ExtraView')))
+            WebDriverWait(self.browser, 60).until(EC.presence_of_element_located((By.ID, 'ExtraView')))
             self.browser.find_element_by_xpath('//div[@class="RealContent"]//li[@data-type="ranked"]/a').click()
-            WebDriverWait(self.browser, 30).until(EC.presence_of_element_located((By.ID, 'WinRatioSparkline')))
+            WebDriverWait(self.browser, 60).until(EC.presence_of_element_located((By.ID, 'WinRatioSparkline')))
             print(len(self.browser.page_source))
             self.pages.append(self.browser.page_source)
         print(len(self.pages))
 
-    # todo add url to dict
     def craw_gameid_info(self):
         count = 0
         for page in self.pages:
