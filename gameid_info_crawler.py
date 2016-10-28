@@ -16,7 +16,7 @@ class GameIDInfoCrawler(object):
     def __init__(self):
         self.browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs')
         # self.browser = webdriver.Chrome()
-        self.browser.set_page_load_timeout(20)
+        self.browser.set_page_load_timeout(15)
         self.url = 'http://www.op.gg/ranking/ladder/'
         self.page_urls = []
         self.failed_page_urls = []
@@ -100,11 +100,13 @@ class GameIDInfoCrawler(object):
         for player in all_player[1:-1]:
             if player.find_elements_by_tag_name('td')[3].text == 'Diamond 1':
                 break
-            tmp_link = player.find_element_by_tag_name('a').get_attribute('href')
-            tmp_full_link = parse.urljoin(self.url, tmp_link)
-            print('append:', tmp_full_link)
-            self.page_urls.append(tmp_full_link)
+            if player.find_elements_by_tag_name('td')[3].text in ['Challenger', 'Master']:
+                tmp_link = player.find_element_by_tag_name('a').get_attribute('href')
+                tmp_full_link = parse.urljoin(self.url, tmp_link)
+                print('append:', tmp_full_link)
+                self.page_urls.append(tmp_full_link)
         print('length of url appended:', len(self.page_urls))
+        self.failed_page_urls = self.page_urls
         while len(self.failed_page_urls) != 0:
             pool = Pool(8)
             pool.map(self.page_generator, self.failed_page_urls)
@@ -112,13 +114,12 @@ class GameIDInfoCrawler(object):
             pool.join()
 
     def craw_gameid_info(self):
-        count = 0
+        base_url = 'http://www.op.gg/summoner/'
         for page in self.pages:
             soup = htmlparser.HtmlParser(page).get_soup()
             tmp_dict = {}
-            tmp_dict['link'] = self.page_urls[count]
-            count += 1
             tmp_dict['id'] = soup.find('div', class_='Profile').find('span', class_='Name').get_text()
+            tmp_dict['link'] = parse.urljoin(base_url, 'userName=' + tmp_dict['id'])
             tmp_dict['rank'] = soup.find('div', class_='Rank').find('a').get_text()
             link = soup.find('div', class_='Face').find('img').get('src')
             print('img link:', link)
