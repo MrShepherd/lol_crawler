@@ -2,3 +2,4 @@
 __pycache__/
 ghostdriver.log
 img/
+backup_gameid_info_crawler.py

@@ -5,7 +5,7 @@ import gameid_info_crawler
 
 if __name__ == '__main__':
     time_start = time.time()
-    print('start crawler...')
+    print('crawler started... good luck')
     # crawler = basic_data_crawler.TeamDataCrawler()
     # crawler.page_collector()
     # print(crawler.craw_basic_info())
@@ -14,8 +14,7 @@ if __name__ == '__main__':
     # crawler.close()
     crawler = gameid_info_crawler.GameIDInfoCrawler()
     crawler.page_collector()
-    crawler.page_generator()
-    # print(crawler.craw_gameid_info())
+    print(crawler.craw_gameid_info())
     crawler.close()
     time_end = time.time()
-    print('end in %s seconds') % (str(time_end - time_start))
+    print('end in %s seconds' % (str(time_end - time_start)))
