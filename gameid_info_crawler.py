@@ -94,14 +94,14 @@ class GameIDInfoCrawler(object):
         except TimeoutException:
             self.browser.execute_script('window.stop()')
         print('get %s successfully' % self.url)
-        # count = 1
-        # while count < 16:
-        #     print(count, end='===>')
-        #     js = "document.body.scrollTop=%d000" % (count * 500)
-        #     self.browser.execute_script(js)
-        #     time.sleep(2)
-        #     count += 1
-        # time.sleep(10)
+        count = 1
+        while count < 16:
+            print(count, end='===>')
+            time.sleep(2)
+            js = "document.body.scrollTop=%d000" % (count * 500)
+            self.browser.execute_script(js)
+            count += 1
+        time.sleep(10)
         all_player = self.browser.find_element_by_xpath('//tbody[@class="Body"]').find_elements_by_xpath('//tr[contains(@class,"Row")]')
         print('number of player found:', len(all_player))
         for player in all_player[1:-1]:
