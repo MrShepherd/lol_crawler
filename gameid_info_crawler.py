@@ -160,6 +160,7 @@ class GameIDInfoCrawler(object):
                     tmp_dict_2['id'] = tmp_dict['id']
                     self.id_mapping.append(tmp_dict_2)
             except Exception:
+                print('failed:', tmp_dict['link'])
                 continue
         return self.gameid_data, self.id_mapping
 
