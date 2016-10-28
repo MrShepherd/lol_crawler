@@ -101,7 +101,6 @@ class GameIDInfoCrawler(object):
             js = "document.body.scrollTop=%d000" % (count * 500)
             self.browser.execute_script(js)
             count += 1
-        time.sleep(10)
         all_player = self.browser.find_element_by_xpath('//tbody[@class="Body"]').find_elements_by_xpath('//tr[contains(@class,"Row")]')
         print('number of player found:', len(all_player))
         for player in all_player[1:-1]:
