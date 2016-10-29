@@ -54,6 +54,11 @@ class GameIDInfoCrawler(object):
                 browser.close()
                 browser.quit()
                 return False
+            except TimeoutException:
+                self.failed_downloaded_page_urls.append(url)
+                browser.close()
+                browser.quit()
+                return False
         except TimeoutException:
             self.failed_downloaded_page_urls.append(url)
             browser.close()
@@ -72,6 +77,11 @@ class GameIDInfoCrawler(object):
                 browser.find_element_by_xpath('//div[@class="RealContent"]//li[@data-type="ranked"]/a').click()
                 WebDriverWait(browser, 120).until(EC.presence_of_element_located((By.ID, 'WinRatioSparkline')))
             except NoSuchElementException:
+                self.failed_downloaded_page_urls.append(url)
+                browser.close()
+                browser.quit()
+                return False
+            except TimeoutException:
                 self.failed_downloaded_page_urls.append(url)
                 browser.close()
                 browser.quit()
