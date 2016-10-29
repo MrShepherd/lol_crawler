@@ -54,17 +54,17 @@ class GameIDInfoCrawler(object):
                 self.failed_downloaded_page_urls.append(url)
                 browser.close()
                 browser.quit()
-                return ''
+                return url + '+' + ''
             except TimeoutException:
                 self.failed_downloaded_page_urls.append(url)
                 browser.close()
                 browser.quit()
-                return ''
+                return url + '+' + ''
         except TimeoutException:
             self.failed_downloaded_page_urls.append(url)
             browser.close()
             browser.quit()
-            return ''
+            return url + '+' + ''
         # click link
         try:
             browser.find_element_by_xpath('//div[@class="RealContent"]//li[@data-type="ranked"]/a').click()
@@ -81,25 +81,25 @@ class GameIDInfoCrawler(object):
                 self.failed_downloaded_page_urls.append(url)
                 browser.close()
                 browser.quit()
-                return ''
+                return url + '+' + ''
             except TimeoutException:
                 self.failed_downloaded_page_urls.append(url)
                 browser.close()
                 browser.quit()
-                return ''
+                return url + '+' + ''
         except TimeoutException:
             self.failed_downloaded_page_urls.append(url)
             browser.close()
             browser.quit()
-            return ''
+            return url + '+' + ''
         print('length of html:', len(browser.page_source))
         page_source = browser.page_source
-        self.pages.append(browser.page_source)
+        self.pages.append(url + '+' + browser.page_source)
         print('number of pages succeffully downloaded:', len(self.pages))
         print('number of pages failed to download:', len(self.failed_downloaded_page_urls))
         browser.close()
         browser.quit()
-        return page_source
+        return url + '+' + page_source
 
     def page_collector(self):
         try:
@@ -132,58 +132,59 @@ class GameIDInfoCrawler(object):
             pool.join()
         print('number of pages downloaded:', len(self.pages))
 
-    def craw_gameid_info(self):
+    def parse_gameid_info(self, page):
         base_url = 'http://www.op.gg/summoner/'
-        # self.pages.append(request.urlopen('http://www.op.gg/summoner/userName=Jin%20Air%20Winged'))
-        # self.pages.append(request.urlopen('http://www.op.gg/summoner/userName=%EA%B0%95%EC%B2%A0%EC%9D%98%EC%97%B0%EA%B8%88%EC%88%A04'))
+        print('number of pages failed to parse:', len(self.failed_parsed_pages))
+        self.failed_parsed_pages.remove(page)
+        tmp_dict = {}
+        url = page.split('+', 1)[0]
+        soup = htmlparser.HtmlParser(page.split('+', 1)[1]).get_soup()
+        try:
+            tmp_dict['id'] = soup.find('div', class_='Profile').find_all('span', class_='Name')[-1].get_text()
+            print('id:', tmp_dict['id'])
+            tmp_dict['link'] = parse.urljoin(base_url, 'userName=' + tmp_dict['id'])
+            print('link:', tmp_dict['link'])
+            tmp_dict['rank'] = soup.find('div', class_='Rank').find('a').find('span').get_text()
+            link = 'http:' + soup.find('div', class_='Face').find('img').get('src')
+            print('img link:', link)
+            if not os.path.exists(self.img_path):
+                os.makedirs(self.img_path)
+            request.urlretrieve(link, self.img_path + tmp_dict['id'] + '.png')
+            tmp_dict['tier'] = soup.find('div', class_='TierRankInfo').find('span', class_='tierRank').get_text()
+            tmp_dict['lp'] = soup.find('div', class_='TierRankInfo').find('span', class_='LeaguePoints').get_text().split()[0].replace(',', '')
+            tmp_dict['total_win'] = soup.find('div', class_='TierRankInfo').find('span', class_='wins').get_text().replace('W', '')
+            tmp_dict['total_lose'] = soup.find('div', class_='TierRankInfo').find('span', class_='losses').get_text().replace('L', '')
+            tmp_dict['total_win_ratio'] = soup.find('div', class_='TierRankInfo').find('span', class_='winratio').get_text().split()[2].replace('%', '')
+            tmp_dict['mmr'] = soup.find('div', id='ExtraView').find('td', class_='MMR').get_text().replace(',', '').strip()
+            tmp_dict['20win'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioTitle').get_text().split()[1].replace('W', '')
+            tmp_dict['20lose'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioTitle').get_text().split()[2].replace('L', '')
+            tmp_dict['20winratio'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioText').get_text().replace('%', '').replace('%', '')
+            tmp_dict['20kill'] = soup.find('div', class_='GameAverageStats').find('span', class_='Kill').get_text()
+            tmp_dict['20death'] = soup.find('div', class_='GameAverageStats').find('span', class_='Death').get_text()
+            tmp_dict['20assist'] = soup.find('div', class_='GameAverageStats').find('span', class_='Assist').get_text()
+            tmp_dict['20kda'] = soup.find('div', class_='KDARatio').find('span', class_='KDARatio').get_text().split(':')[0]
+            tmp_dict['20CK'] = soup.find('div', class_='KDARatio').find('span', class_='CKRate').get_text().split()[2].replace(')', '').replace('%', '')
+            self.gameid_data.append(tmp_dict)
+            tmp_dict_2 = {}
+            if soup.find('div', class_='Information').find('div', class_='Team') is not None:
+                tmp_dict_2['team'] = soup.find('div', class_='Information').find('div', class_='Team').get_text().strip().split('\n')[0]
+                tmp_dict_2['name'] = soup.find('div', class_='Information').find('span', class_='Name').get_text().replace('[', '').replace(']', '')
+                tmp_dict_2['id'] = tmp_dict['id']
+                self.id_mapping.append(tmp_dict_2)
+        except Exception as e:
+            print('failed:', url)
+            print(e)
+            self.failed_downloaded_page_urls.append(url)
+            self.failed_parsed_pages.append(self.page_generator(url))
+
+    def craw_gameid_info(self):
         self.failed_parsed_pages = self.pages
         self.pages = []
         while len(self.failed_parsed_pages) != 0:
-            print('number of pages failed to parse:', len(self.failed_parsed_pages))
-            # page = random.sample(self.failed_parsed_pages, 1)
-            page = choice(self.failed_parsed_pages)
-            self.failed_parsed_pages.remove(page)
-            tmp_dict = {}
-            soup = htmlparser.HtmlParser(page).get_soup()
-            try:
-                tmp_dict['id'] = soup.find('div', class_='Profile').find_all('span', class_='Name')[-1].get_text()
-                print('id:', tmp_dict['id'])
-                tmp_dict['link'] = parse.urljoin(base_url, 'userName=' + tmp_dict['id'])
-                print('link:', tmp_dict['link'])
-                tmp_dict['rank'] = soup.find('div', class_='Rank').find('a').find('span').get_text()
-                link = 'http:' + soup.find('div', class_='Face').find('img').get('src')
-                print('img link:', link)
-                if not os.path.exists(self.img_path):
-                    os.makedirs(self.img_path)
-                request.urlretrieve(link, self.img_path + tmp_dict['id'] + '.png')
-                tmp_dict['tier'] = soup.find('div', class_='TierRankInfo').find('span', class_='tierRank').get_text()
-                tmp_dict['lp'] = soup.find('div', class_='TierRankInfo').find('span', class_='LeaguePoints').get_text().split()[0].replace(',', '')
-                tmp_dict['total_win'] = soup.find('div', class_='TierRankInfo').find('span', class_='wins').get_text().replace('W', '')
-                tmp_dict['total_lose'] = soup.find('div', class_='TierRankInfo').find('span', class_='losses').get_text().replace('L', '')
-                tmp_dict['total_win_ratio'] = soup.find('div', class_='TierRankInfo').find('span', class_='winratio').get_text().split()[2].replace('%', '')
-                tmp_dict['mmr'] = soup.find('div', id='ExtraView').find('td', class_='MMR').get_text().replace(',', '').strip()
-                tmp_dict['20win'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioTitle').get_text().split()[1].replace('W', '')
-                tmp_dict['20lose'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioTitle').get_text().split()[2].replace('L', '')
-                tmp_dict['20winratio'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioText').get_text().replace('%', '').replace('%', '')
-                tmp_dict['20kill'] = soup.find('div', class_='GameAverageStats').find('span', class_='Kill').get_text()
-                tmp_dict['20death'] = soup.find('div', class_='GameAverageStats').find('span', class_='Death').get_text()
-                tmp_dict['20assist'] = soup.find('div', class_='GameAverageStats').find('span', class_='Assist').get_text()
-                tmp_dict['20kda'] = soup.find('div', class_='KDARatio').find('span', class_='KDARatio').get_text().split(':')[0]
-                tmp_dict['20CK'] = soup.find('div', class_='KDARatio').find('span', class_='CKRate').get_text().split()[2].replace(')', '').replace('%', '')
-                self.gameid_data.append(tmp_dict)
-                tmp_dict_2 = {}
-                if soup.find('div', class_='Information').find('div', class_='Team') is not None:
-                    tmp_dict_2['team'] = soup.find('div', class_='Information').find('div', class_='Team').get_text().strip().split('\n')[0]
-                    tmp_dict_2['name'] = soup.find('div', class_='Information').find('span', class_='Name').get_text().replace('[', '').replace(']', '')
-                    tmp_dict_2['id'] = tmp_dict['id']
-                    self.id_mapping.append(tmp_dict_2)
-            except Exception as e:
-                print('failed:', tmp_dict['link'])
-                print(e)
-                self.failed_downloaded_page_urls.append((tmp_dict['link']))
-                self.failed_parsed_pages.append(self.page_generator(tmp_dict['link']))
-                continue
-
+            pool = Pool(8)
+            pool.map(self.parse_gameid_info, self.failed_parsed_pages)
+            pool.close()
+            pool.join()
         return self.gameid_data, self.id_mapping
 
     def close(self):

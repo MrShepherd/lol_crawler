@@ -55,6 +55,18 @@ class TeamDataCrawler(object):
                 temp_dict['team_name'] = li.find('div', class_='teamname').get_text()
                 temp_dict['team_nation'] = li.find('i').get('class')[1]
                 self.nation_set.add(temp_dict['team_nation'])
+                if temp_dict['team_nation'] in ['CN']:
+                    tmp_dict['team_league'] = 'LPL'
+                elif temp_dict['team_nation'] in ['KR']:
+                    temp_dict['team_league'] = 'LCK'
+                elif temp_dict['team_nation'] in ['TW', 'HK']:
+                    temp_dict['team_league'] = 'LMS'
+                elif temp_dict['team_nation'] in ['US']:
+                    temp_dict['team_league'] = 'LCS-NA'
+                elif temp_dict['team_nation'] in ['EU']:
+                    temp_dict['team_league'] = 'LCS-EU'
+                else:
+                    tmp_dict['team_league'] = 'ELSE'
                 self.team_data.append(temp_dict)
         print(self.nation_set)
         return self.team_data
