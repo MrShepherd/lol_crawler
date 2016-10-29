@@ -174,6 +174,8 @@ class GameIDInfoCrawler(object):
         except Exception as e:
             print('failed:', url)
             print(e)
+            if soup.find('div', class_='SummonerNotFoundLayout') is not None:
+                return
             self.failed_downloaded_page_urls.append(url)
             self.failed_parsed_pages.append(self.page_generator(url))
 
