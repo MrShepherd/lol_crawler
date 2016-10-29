@@ -54,17 +54,17 @@ class GameIDInfoCrawler(object):
                 self.failed_downloaded_page_urls.append(url)
                 browser.close()
                 browser.quit()
-                return False
+                return ''
             except TimeoutException:
                 self.failed_downloaded_page_urls.append(url)
                 browser.close()
                 browser.quit()
-                return False
+                return ''
         except TimeoutException:
             self.failed_downloaded_page_urls.append(url)
             browser.close()
             browser.quit()
-            return False
+            return ''
         # click link
         try:
             browser.find_element_by_xpath('//div[@class="RealContent"]//li[@data-type="ranked"]/a').click()
@@ -81,17 +81,17 @@ class GameIDInfoCrawler(object):
                 self.failed_downloaded_page_urls.append(url)
                 browser.close()
                 browser.quit()
-                return False
+                return ''
             except TimeoutException:
                 self.failed_downloaded_page_urls.append(url)
                 browser.close()
                 browser.quit()
-                return False
+                return ''
         except TimeoutException:
             self.failed_downloaded_page_urls.append(url)
             browser.close()
             browser.quit()
-            return False
+            return ''
         print('length of html:', len(browser.page_source))
         page_source = browser.page_source
         self.pages.append(browser.page_source)
@@ -137,6 +137,7 @@ class GameIDInfoCrawler(object):
         # self.pages.append(request.urlopen('http://www.op.gg/summoner/userName=Jin%20Air%20Winged'))
         # self.pages.append(request.urlopen('http://www.op.gg/summoner/userName=%EA%B0%95%EC%B2%A0%EC%9D%98%EC%97%B0%EA%B8%88%EC%88%A04'))
         self.failed_parsed_pages = self.pages
+        self.pages = []
         while len(self.failed_parsed_pages) != 0:
             print('number of pages failed to parse:', len(self.failed_parsed_pages))
             # page = random.sample(self.failed_parsed_pages, 1)
