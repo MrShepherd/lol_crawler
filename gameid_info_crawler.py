@@ -19,14 +19,15 @@ class GameIDInfoCrawler(object):
         self.browser.set_page_load_timeout(15)
         self.url = 'http://www.op.gg/ranking/ladder/'
         self.page_urls = []
-        self.failed_page_urls = []
+        self.failed_downloaded_page_urls = []
         self.pages = []
+        self.failed_parsed_pages = []
         self.gameid_data = []
         self.id_mapping = []
         self.img_path = 'img/gameid/'
 
     def page_generator(self, url):
-        self.failed_page_urls.remove(url)
+        self.failed_downloaded_page_urls.remove(url)
         browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs')
         # browser = webdriver.Chrome()
         browser.set_page_load_timeout(15)
@@ -49,12 +50,12 @@ class GameIDInfoCrawler(object):
                 browser.find_element_by_xpath('//div[@class="Buttons"]/button[contains(text(),"Check MMR")]').click()
                 WebDriverWait(browser, 120).until(EC.presence_of_element_located((By.ID, 'ExtraView')))
             except NoSuchElementException:
-                self.failed_page_urls.append(url)
+                self.failed_downloaded_page_urls.append(url)
                 browser.close()
                 browser.quit()
                 return False
         except TimeoutException:
-            self.failed_page_urls.append(url)
+            self.failed_downloaded_page_urls.append(url)
             browser.close()
             browser.quit()
             return False
@@ -71,22 +72,23 @@ class GameIDInfoCrawler(object):
                 browser.find_element_by_xpath('//div[@class="RealContent"]//li[@data-type="ranked"]/a').click()
                 WebDriverWait(browser, 120).until(EC.presence_of_element_located((By.ID, 'WinRatioSparkline')))
             except NoSuchElementException:
-                self.failed_page_urls.append(url)
+                self.failed_downloaded_page_urls.append(url)
                 browser.close()
                 browser.quit()
                 return False
         except TimeoutException:
-            self.failed_page_urls.append(url)
+            self.failed_downloaded_page_urls.append(url)
             browser.close()
             browser.quit()
             return False
         print('length of html:', len(browser.page_source))
+        page_source = browser.page_source
         self.pages.append(browser.page_source)
         print('number of pages succeffully downloaded:', len(self.pages))
-        print('number of pages failed to download:', len(self.failed_page_urls))
+        print('number of pages failed to download:', len(self.failed_downloaded_page_urls))
         browser.close()
         browser.quit()
-        return True
+        return page_source
 
     def page_collector(self):
         try:
@@ -95,7 +97,7 @@ class GameIDInfoCrawler(object):
             self.browser.execute_script('window.stop()')
         print('get %s successfully' % self.url)
         count = 1
-        while count < 16:
+        while count < 20:
             print(count, end='===>')
             time.sleep(2)
             js = "document.body.scrollTop=%d000" % (count * 500)
@@ -111,10 +113,10 @@ class GameIDInfoCrawler(object):
                 self.page_urls.append(tmp_full_link)
                 # break
         print('length of url appended:', len(self.page_urls))
-        self.failed_page_urls = self.page_urls
-        while len(self.failed_page_urls) != 0:
+        self.failed_downloaded_page_urls = self.page_urls
+        while len(self.failed_downloaded_page_urls) != 0:
             pool = Pool(8)
-            pool.map(self.page_generator, self.failed_page_urls)
+            pool.map(self.page_generator, self.failed_downloaded_page_urls)
             pool.close()
             pool.join()
         print('number of pages downloaded:', len(self.pages))
@@ -123,7 +125,11 @@ class GameIDInfoCrawler(object):
         base_url = 'http://www.op.gg/summoner/'
         # self.pages.append(request.urlopen('http://www.op.gg/summoner/userName=Jin%20Air%20Winged'))
         # self.pages.append(request.urlopen('http://www.op.gg/summoner/userName=%EA%B0%95%EC%B2%A0%EC%9D%98%EC%97%B0%EA%B8%88%EC%88%A04'))
-        for page in self.pages:
+        self.failed_parsed_pages = self.pages
+        while len(self.failed_parsed_pages) != 0:
+            print('number of pages failed to parse:', len(self.failed_parsed_pages))
+            page = random.sample(self.failed_parsed_pages, 1)
+            self.failed_parsed_pages.remove(page)
             tmp_dict = {}
             soup = htmlparser.HtmlParser(page).get_soup()
             try:
@@ -158,9 +164,13 @@ class GameIDInfoCrawler(object):
                     tmp_dict_2['name'] = soup.find('div', class_='Information').find('span', class_='Name').get_text().replace('[', '').replace(']', '')
                     tmp_dict_2['id'] = tmp_dict['id']
                     self.id_mapping.append(tmp_dict_2)
-            except Exception:
+            except Exception as e:
                 print('failed:', tmp_dict['link'])
+                print(e)
+                self.failed_downloaded_page_urls.append((tmp_dict['link']))
+                self.failed_parsed_pages.append(self.page_generator(tmp_dict['link']))
                 continue
+
         return self.gameid_data, self.id_mapping
 
     def close(self):
