@@ -1,7 +1,7 @@
 import os
-import random
 import time
 from multiprocessing.dummy import Pool
+from random import choice
 from urllib import parse, request
 
 from selenium import webdriver
@@ -139,7 +139,8 @@ class GameIDInfoCrawler(object):
         self.failed_parsed_pages = self.pages
         while len(self.failed_parsed_pages) != 0:
             print('number of pages failed to parse:', len(self.failed_parsed_pages))
-            page = random.sample(self.failed_parsed_pages, 1)
+            # page = random.sample(self.failed_parsed_pages, 1)
+            page = choice(self.failed_parsed_pages)
             self.failed_parsed_pages.remove(page)
             tmp_dict = {}
             soup = htmlparser.HtmlParser(page).get_soup()
