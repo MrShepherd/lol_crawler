@@ -2,6 +2,7 @@ import os
 from multiprocessing.dummy import Pool
 from urllib import parse, request
 
+import time
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.by import By
@@ -105,13 +106,13 @@ class GameIDInfoCrawler(object):
         except TimeoutException:
             self.browser.execute_script('window.stop()')
         print('get %s successfully' % self.url)
-        # count = 1
-        # while count < 20:
-        #     print(count, end='===>')
-        #     time.sleep(2)
-        #     js = "document.body.scrollTop=%d000" % (count * 500)
-        #     self.browser.execute_script(js)
-        #     count += 1
+        count = 1
+        while count < 20:
+            print(count, end='===>')
+            time.sleep(2)
+            js = "document.body.scrollTop=%d000" % (count * 500)
+            self.browser.execute_script(js)
+            count += 1
         all_player = self.browser.find_element_by_xpath('//tbody[@class="Body"]').find_elements_by_xpath('//tr[contains(@class,"Row")]')
         print('number of player found:', len(all_player))
         for player in all_player[1:-1]:
