@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 class DBHandler(object):
     def __init__(self):
         self.engine = create_engine('mysql+mysqlconnector://lolhfdev:lolhfdev@localhost:3306/lolhfdev')
-        self.DBSession = sessionmaker(bind=self.engine)
+        self.DBSession = sessionmaker(bind=self.engine, autocommit=True)
         self.session = self.DBSession()
 
     def save_data(self, data_list, table_model):
@@ -15,7 +15,7 @@ class DBHandler(object):
                 row = table_model(**data)
                 print('saving:', row)
                 self.session.add(row)
-                self.session.commit()
+                # self.session.commit()
             except Exception as e:
                 print(e)
                 continue

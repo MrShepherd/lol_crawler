@@ -23,7 +23,6 @@ class Player(Base):
     player_country = Column(String(20))
     player_team = Column(String(50))
     player_place = Column(String(20))
-    idmappings = relationship('IDMapping', backref='player', lazy='dynamic')
 
     def __repr__(self):
         return '<Player %r>' % self.player_name
@@ -32,8 +31,8 @@ class Player(Base):
 class IDMapping(Base):
     __tablename__ = 'idmapping'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    playername = Column(String(64), ForeignKey('player.player_name'), )
-    gameid = Column(String(64))
+    player_name = Column(String(100))
+    game_id = Column(String(100))
 
     def __repr__(self):
         return '<IDMapping %r>' % self.gameid
@@ -41,8 +40,8 @@ class IDMapping(Base):
 
 class GameIDInfo(Base):
     __tablename__ = 'gameidinfo'
-    gameid = Column(String(64), primary_key=True)
-    rank = Column(Integer)
+    game_id = Column(String(100), primary_key=True)
+    rank = Column(String(10))
     tier = Column(String(32))
     lp = Column(Integer)
     win = Column(Integer)

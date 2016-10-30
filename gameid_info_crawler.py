@@ -179,7 +179,7 @@ class GameIDInfoCrawler(object):
             self.failed_downloaded_page_urls.append(url)
             self.failed_parsed_pages.append(self.page_generator(url))
 
-    def craw_gameid_info(self):
+    def crawl_gameid_info(self):
         self.failed_parsed_pages = self.pages
         self.pages = []
         while len(self.failed_parsed_pages) != 0:

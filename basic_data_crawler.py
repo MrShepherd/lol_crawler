@@ -48,7 +48,7 @@ class TeamDataCrawler(object):
         print('collected %d team' % len(self.pages))
         print('collected %d player' % len(self.playerpages))
 
-    def craw_basic_info(self):
+    def crawl_basic_info(self):
         for page in self.pages:
             temp_dict = {}
             soup = htmlparser.HtmlParser(page).get_soup()
@@ -74,7 +74,7 @@ class TeamDataCrawler(object):
         print(self.nation_set)
         return self.team_data
 
-    def craw_team_img(self):
+    def crawl_team_img(self):
         if not os.path.exists(self.img_path + '/nation'):
             os.makedirs(self.img_path + '/nation')
         if not os.path.exists(self.img_path + '/team'):
@@ -91,7 +91,7 @@ class TeamDataCrawler(object):
             request.urlretrieve(img_link, self.img_path + '/team/' + img_name)
         return 'ok'
 
-    def craw_player_info(self):
+    def crawl_player_info(self):
         if not os.path.exists(self.img_path + '/player'):
             os.makedirs(self.img_path + '/player')
         # print(len(self.playerpages))
