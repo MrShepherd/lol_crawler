@@ -1,7 +1,5 @@
 import os
-import time
 from multiprocessing.dummy import Pool
-from random import choice
 from urllib import parse, request
 
 from selenium import webdriver
@@ -107,13 +105,13 @@ class GameIDInfoCrawler(object):
         except TimeoutException:
             self.browser.execute_script('window.stop()')
         print('get %s successfully' % self.url)
-        count = 1
-        while count < 20:
-            print(count, end='===>')
-            time.sleep(2)
-            js = "document.body.scrollTop=%d000" % (count * 500)
-            self.browser.execute_script(js)
-            count += 1
+        # count = 1
+        # while count < 20:
+        #     print(count, end='===>')
+        #     time.sleep(2)
+        #     js = "document.body.scrollTop=%d000" % (count * 500)
+        #     self.browser.execute_script(js)
+        #     count += 1
         all_player = self.browser.find_element_by_xpath('//tbody[@class="Body"]').find_elements_by_xpath('//tr[contains(@class,"Row")]')
         print('number of player found:', len(all_player))
         for player in all_player[1:-1]:
@@ -140,36 +138,36 @@ class GameIDInfoCrawler(object):
         url = page.split('+', 1)[0]
         soup = htmlparser.HtmlParser(page.split('+', 1)[1]).get_soup()
         try:
-            tmp_dict['id'] = soup.find('div', class_='Profile').find_all('span', class_='Name')[-1].get_text()
-            print('id:', tmp_dict['id'])
-            tmp_dict['link'] = parse.urljoin(base_url, 'userName=' + tmp_dict['id'])
+            tmp_dict['game_id'] = soup.find('div', class_='Profile').find_all('span', class_='Name')[-1].get_text()
+            print('game_id:', tmp_dict['game_id'])
+            tmp_dict['link'] = parse.urljoin(base_url, 'userName=' + tmp_dict['game_id'])
             print('link:', tmp_dict['link'])
             tmp_dict['rank'] = soup.find('div', class_='Rank').find('a').find('span').get_text()
             link = 'http:' + soup.find('div', class_='Face').find('img').get('src')
             print('img link:', link)
             if not os.path.exists(self.img_path):
                 os.makedirs(self.img_path)
-            request.urlretrieve(link, self.img_path + tmp_dict['id'] + '.png')
+            request.urlretrieve(link, self.img_path + tmp_dict['game_id'] + '.png')
             tmp_dict['tier'] = soup.find('div', class_='TierRankInfo').find('span', class_='tierRank').get_text()
             tmp_dict['lp'] = soup.find('div', class_='TierRankInfo').find('span', class_='LeaguePoints').get_text().split()[0].replace(',', '')
             tmp_dict['total_win'] = soup.find('div', class_='TierRankInfo').find('span', class_='wins').get_text().replace('W', '')
             tmp_dict['total_lose'] = soup.find('div', class_='TierRankInfo').find('span', class_='losses').get_text().replace('L', '')
             tmp_dict['total_win_ratio'] = soup.find('div', class_='TierRankInfo').find('span', class_='winratio').get_text().split()[2].replace('%', '')
             tmp_dict['mmr'] = soup.find('div', id='ExtraView').find('td', class_='MMR').get_text().replace(',', '').strip()
-            tmp_dict['20win'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioTitle').get_text().split()[1].replace('W', '')
-            tmp_dict['20lose'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioTitle').get_text().split()[2].replace('L', '')
-            tmp_dict['20winratio'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioText').get_text().replace('%', '').replace('%', '')
-            tmp_dict['20kill'] = soup.find('div', class_='GameAverageStats').find('span', class_='Kill').get_text()
-            tmp_dict['20death'] = soup.find('div', class_='GameAverageStats').find('span', class_='Death').get_text()
-            tmp_dict['20assist'] = soup.find('div', class_='GameAverageStats').find('span', class_='Assist').get_text()
-            tmp_dict['20kda'] = soup.find('div', class_='KDARatio').find('span', class_='KDARatio').get_text().split(':')[0]
-            tmp_dict['20CK'] = soup.find('div', class_='KDARatio').find('span', class_='CKRate').get_text().split()[2].replace(')', '').replace('%', '')
+            tmp_dict['twentywin'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioTitle').get_text().split()[1].replace('W', '')
+            tmp_dict['twentylose'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioTitle').get_text().split()[2].replace('L', '')
+            tmp_dict['twentywinratio'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioText').get_text().replace('%', '').replace('%', '')
+            tmp_dict['twentyavgkill'] = soup.find('div', class_='GameAverageStats').find('span', class_='Kill').get_text()
+            tmp_dict['twentyavgdeath'] = soup.find('div', class_='GameAverageStats').find('span', class_='Death').get_text()
+            tmp_dict['twentyavgassist'] = soup.find('div', class_='GameAverageStats').find('span', class_='Assist').get_text()
+            tmp_dict['twentyavgkda'] = soup.find('div', class_='KDARatio').find('span', class_='KDARatio').get_text().split(':')[0]
+            tmp_dict['twentyavgck'] = soup.find('div', class_='KDARatio').find('span', class_='CKRate').get_text().split()[2].replace(')', '').replace('%', '')
             self.gameid_data.append(tmp_dict)
             tmp_dict_2 = {}
             if soup.find('div', class_='Information').find('div', class_='Team') is not None:
-                tmp_dict_2['team'] = soup.find('div', class_='Information').find('div', class_='Team').get_text().strip().split('\n')[0]
-                tmp_dict_2['name'] = soup.find('div', class_='Information').find('span', class_='Name').get_text().replace('[', '').replace(']', '')
-                tmp_dict_2['id'] = tmp_dict['id']
+                tmp_dict_2['player_team'] = soup.find('div', class_='Information').find('div', class_='Team').get_text().strip().split('\n')[0]
+                tmp_dict_2['player_name'] = soup.find('div', class_='Information').find('span', class_='Name').get_text().replace('[', '').replace(']', '')
+                tmp_dict_2['game_id'] = tmp_dict['game_id']
                 self.id_mapping.append(tmp_dict_2)
         except Exception as e:
             print('failed:', url)

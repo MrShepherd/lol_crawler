@@ -50,7 +50,6 @@ class TeamDataCrawler(object):
 
     def crawl_basic_info(self):
         for page in self.pages:
-            temp_dict = {}
             soup = htmlparser.HtmlParser(page).get_soup()
             all_li = soup.find('ul', {'id': 'teamranking_left_team', 'class': 'nation_tab'}).find_all('li')
             for li in all_li:
@@ -96,7 +95,6 @@ class TeamDataCrawler(object):
             os.makedirs(self.img_path + '/player')
         # print(len(self.playerpages))
         for page in self.playerpages:
-            tmp_dict = {}
             soup = htmlparser.HtmlParser(page).get_soup()
             # print('hello')
             if soup.find('ul', class_='tm_partner_list') is None or len(soup.find('ul', class_='tm_partner_list')) == 0:
