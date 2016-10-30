@@ -1,6 +1,6 @@
-from sqlalchemy import Column, String, Integer, Float, create_engine
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy import Column, String, Integer, Float
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from sqlalchemy.schema import ForeignKey
 
 Base = declarative_base()
@@ -11,33 +11,32 @@ class Team(Base):
     team_name = Column(String(100), primary_key=True)
     team_nation = Column(String(10))
     team_league = Column(String(10))
-    players = relationship('Player', backref='team', lazy='dynamic')
 
     def __repr__(self):
-        return '<Team %r>' % self.name
+        return '<Team %r>' % self.team_name
 
 
 class Player(Base):
     __tablename__ = 'player'
     # id = Column(Integer, primary_key=True, autoincrement='ignore_fk')
-    name = Column(String(64), primary_key=True)
-    country = Column(String(32))
-    team = Column(String(32), ForeignKey('team.name'))
-    place = Column(String(16))
+    player_name = Column(String(100), primary_key=True)
+    player_country = Column(String(20))
+    player_team = Column(String(50))
+    player_place = Column(String(20))
     idmappings = relationship('IDMapping', backref='player', lazy='dynamic')
 
     def __repr__(self):
-        return '<Player %r>' % self.name
+        return '<Player %r>' % self.player_name
 
 
 class IDMapping(Base):
     __tablename__ = 'idmapping'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    playername = Column(String(64), ForeignKey('player.name'), )
+    playername = Column(String(64), ForeignKey('player.player_name'), )
     gameid = Column(String(64))
 
     def __repr__(self):
-        return '<IDMapping %r>' % self.name
+        return '<IDMapping %r>' % self.gameid
 
 
 class GameIDInfo(Base):
