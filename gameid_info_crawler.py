@@ -167,7 +167,7 @@ class GameIDInfoCrawler(object):
             tmp_dict_2 = {}
             if soup.find('div', class_='Information').find('div', class_='Team') is not None:
                 tmp_dict_2['player_team'] = soup.find('div', class_='Information').find('div', class_='Team').get_text().strip().split('\n')[0]
-                tmp_dict_2['player_name'] = soup.find('div', class_='Information').find('span', class_='Name').get_text().replace('[', '').replace(']', '')
+                tmp_dict_2['player_name'] = soup.find('div', class_='Information').find('span', class_='Name').get_text().replace('[', '').replace(']', '').upper()
                 tmp_dict_2['game_id'] = tmp_dict['game_id']
                 self.id_mapping.append(tmp_dict_2)
         except Exception as e:

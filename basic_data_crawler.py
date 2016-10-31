@@ -45,8 +45,8 @@ class TeamDataCrawler(object):
             self.browser.switch_to_window(handle)
             self.playerpages.append(self.browser.page_source)
         del (self.playerpages[0])
-        print('collected %d team' % len(self.pages))
-        print('collected %d player' % len(self.playerpages))
+        print('collected %d team page' % len(self.pages))
+        print('collected %d player page' % len(self.playerpages))
 
     def crawl_basic_info(self):
         for page in self.pages:
@@ -102,14 +102,28 @@ class TeamDataCrawler(object):
             all_li = soup.find('ul', class_='tm_partner_list').find_all('li')
             for li in all_li:
                 tmp_dict = {}
-                tmp_dict['player_team'] = soup.find('table', class_='team_tba1').find('img').get('alt')
-                tmp_dict['player_name'] = li.find('img').get('alt')
+                tmp_dict['player_team_full_name'] = soup.find('table', class_='team_tba1').find('img').get('alt')
+                tmp_dict['player_team_short_name'] = soup.find('table', class_='team_tba1').find_all('td')[2].get_text().split('：')[1]
+                tmp_dict['player_team_country'] = soup.find('table', class_='team_tba1').find_all('td')[3].get_text().split('：')[1]
+                tmp_dict['player_name'] = li.find('img').get('alt').upper()
                 img_name = tmp_dict['player_name'] + '.png'
                 img_link = li.find('img').get('src')
                 print('saving player img:', img_link)
                 request.urlretrieve(img_link, self.img_path + '/player/' + img_name)
                 tmp_dict['player_country'] = li.find('i').get('class')[1]
                 tmp_dict['player_place'] = li.find('strong').get_text().split(':')[1]
+                if tmp_dict['player_team_country'] in ['中国']:
+                    tmp_dict['player_team_league'] = 'LPL'
+                elif tmp_dict['player_team_country'] in ['韩国']:
+                    tmp_dict['player_team_league'] = 'LCK'
+                elif tmp_dict['player_team_country'] in ['中国台湾', '中国香港']:
+                    tmp_dict['player_team_league'] = 'LMS'
+                elif tmp_dict['player_team_country'] in ['美国']:
+                    tmp_dict['player_team_league'] = 'LCS-NA'
+                elif tmp_dict['player_team_country'] in ['欧盟']:
+                    tmp_dict['player_team_league'] = 'LCS-EU'
+                else:
+                    tmp_dict['player_team_league'] = 'ELSE'
                 self.player_data.append(tmp_dict)
         return self.player_data
 
