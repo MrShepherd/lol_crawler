@@ -14,21 +14,24 @@ import htmlparser
 
 class GameIDInfoCrawler(object):
     def __init__(self):
-        self.browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs')
+        self.service_args = ['--proxy=122.96.59.107:843', '--proxy-type=http']
+        self.browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs', service_args=self.service_args)
         # self.browser = webdriver.Chrome()
         self.browser.set_page_load_timeout(15)
         self.url = 'http://www.op.gg/ranking/ladder/'
-        self.page_urls = []
-        self.failed_downloaded_page_urls = []
+        self.pro_url = 'http://www.op.gg/spectate/list/'
+        self.page_urls = set()
+        self.failed_downloaded_page_urls = set()
         self.pages = []
         self.failed_parsed_pages = []
         self.gameid_data = []
-        self.id_mapping = []
+        self.id_mapping = set()
         self.img_path = 'img/gameid/'
 
     def page_generator(self, url):
         self.failed_downloaded_page_urls.remove(url)
-        browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs')
+        service_args = ['--proxy=122.96.59.107:843', '--proxy-type=http']
+        browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs', service_args=service_args)
         # browser = webdriver.Chrome()
         browser.set_page_load_timeout(15)
         print('getting:', url)
@@ -50,17 +53,17 @@ class GameIDInfoCrawler(object):
                 browser.find_element_by_xpath('//div[@class="Buttons"]/button[contains(text(),"Check MMR")]').click()
                 WebDriverWait(browser, 120).until(EC.presence_of_element_located((By.ID, 'ExtraView')))
             except NoSuchElementException:
-                self.failed_downloaded_page_urls.append(url)
+                self.failed_downloaded_page_urls.add(url)
                 browser.close()
                 browser.quit()
                 return url + '+' + ''
             except TimeoutException:
-                self.failed_downloaded_page_urls.append(url)
+                self.failed_downloaded_page_urls.add(url)
                 browser.close()
                 browser.quit()
                 return url + '+' + ''
         except TimeoutException:
-            self.failed_downloaded_page_urls.append(url)
+            self.failed_downloaded_page_urls.add(url)
             browser.close()
             browser.quit()
             return url + '+' + ''
@@ -77,17 +80,17 @@ class GameIDInfoCrawler(object):
                 browser.find_element_by_xpath('//div[@class="RealContent"]//li[@data-type="ranked"]/a').click()
                 WebDriverWait(browser, 120).until(EC.presence_of_element_located((By.ID, 'WinRatioSparkline')))
             except NoSuchElementException:
-                self.failed_downloaded_page_urls.append(url)
+                self.failed_downloaded_page_urls.add(url)
                 browser.close()
                 browser.quit()
                 return url + '+' + ''
             except TimeoutException:
-                self.failed_downloaded_page_urls.append(url)
+                self.failed_downloaded_page_urls.add(url)
                 browser.close()
                 browser.quit()
                 return url + '+' + ''
         except TimeoutException:
-            self.failed_downloaded_page_urls.append(url)
+            self.failed_downloaded_page_urls.add(url)
             browser.close()
             browser.quit()
             return url + '+' + ''
@@ -120,8 +123,18 @@ class GameIDInfoCrawler(object):
                 tmp_link = player.find_element_by_tag_name('a').get_attribute('href')
                 tmp_full_link = parse.urljoin(self.url, tmp_link)
                 print('append:', tmp_full_link)
-                self.page_urls.append(tmp_full_link)
-                # break
+                self.page_urls.add(tmp_full_link)
+        try:
+            self.browser.get(self.pro_url)
+        except TimeoutException:
+            self.browser.execute_script('window.stop()')
+        print('get %s successfully' % self.pro_url)
+        all_pro_link = self.browser.find_element_by_xpath('//ul[@class="RegisterSummonerList"]').find_elements_by_tag_name('a')
+        for item in all_pro_link:
+            tmp_link = item.get_attribute('href')
+            tmp_full_link = parse.urljoin(self.url, tmp_link)
+            print('append:', tmp_full_link)
+            self.page_urls.add(tmp_full_link)
         print('length of url appended:', len(self.page_urls))
         self.failed_downloaded_page_urls = self.page_urls
         while len(self.failed_downloaded_page_urls) != 0:
@@ -169,13 +182,13 @@ class GameIDInfoCrawler(object):
                 tmp_dict_2['player_team'] = soup.find('div', class_='Information').find('div', class_='Team').get_text().strip().split('\n')[0]
                 tmp_dict_2['player_name'] = soup.find('div', class_='Information').find('span', class_='Name').get_text().replace('[', '').replace(']', '').upper()
                 tmp_dict_2['game_id'] = tmp_dict['game_id']
-                self.id_mapping.append(tmp_dict_2)
+                self.id_mapping.add(tmp_dict_2)
         except Exception as e:
             print('failed:', url)
             print(e)
             if soup.find('div', class_='SummonerNotFoundLayout') is not None:
                 return
-            self.failed_downloaded_page_urls.append(url)
+            self.failed_downloaded_page_urls.add(url)
             self.failed_parsed_pages.append(self.page_generator(url))
 
     def crawl_gameid_info(self):
