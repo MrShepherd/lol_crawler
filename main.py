@@ -45,7 +45,10 @@ if __name__ == '__main__':
         print('id mapping data:\n', id_mapping)
         print('start to save player data to db')
         db_handler.save_data(id_mapping, IDMapping)
+        db_handler.update_summary()
         crawler.close()
-    if 'basic' not in sys.argv and 'daily' not in sys.argv:
+    if 'test' in sys.argv:
+        db_handler.update_summary()
+    if 'basic' not in sys.argv and 'daily' not in sys.argv and 'test' not in sys.argv:
         print('wrong argument')
     print('end in %s seconds' % (str(time.time() - time_start)))

@@ -63,3 +63,31 @@ class GameIDInfo(Base):
     def __repr__(self):
         return '<GameIDInfo %r>' % self.game_id
 
+
+class Summary(Base):
+    __tablename__ = 'summary'
+    player_name = Column(String(100))
+    player_country = Column(String(20))
+    player_team_short_name = Column(String(50))
+    player_team_league = Column(String(20))
+    player_place = Column(String(20))
+    game_id = Column(String(100), primary_key=True)
+    link = Column(String(500))
+    rank = Column(Integer)
+    tier = Column(String(30))
+    lp = Column(Integer)
+    total_win = Column(Integer)
+    total_lose = Column(Integer)
+    total_win_ratio = Column(Integer)
+    mmr = Column(Integer)
+    twentywin = Column(Integer)
+    twentylose = Column(Integer)
+    twentywinratio = Column(Integer)
+    twentyavgkill = Column(Float)
+    twentyavgdeath = Column(Float)
+    twentyavgassist = Column(Float)
+    twentyavgkda = Column(Float)
+    twentyavgck = Column(Float)
+
+    def __repr__(self):
+        return '<Summary %r>' % self.game_id
