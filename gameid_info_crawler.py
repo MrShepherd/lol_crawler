@@ -103,6 +103,7 @@ class GameIDInfoCrawler(object):
         page_source = browser.page_source
         self.pages.append(url + '+' + browser.page_source)
         print('number of pages succeffully downloaded:', len(self.pages))
+        print('number of pages failed to download:', len(self.failed_downloaded_page_urls))
         browser.close()
         browser.quit()
         return url + '+' + page_source
