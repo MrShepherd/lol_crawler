@@ -45,7 +45,7 @@ class GameIDInfoCrawler(object):
             browser.close()
             browser.quit()
         except:
-            print('done')
+            print('good luck')
         # click button
         try:
             browser.find_element_by_xpath('//div[@class="Buttons"]/button[contains(text(),"Check MMR")]').click()
