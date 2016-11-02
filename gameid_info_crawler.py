@@ -40,10 +40,12 @@ class GameIDInfoCrawler(object):
             browser.get(url)
         except TimeoutException:
             browser.execute_script('window.stop()')
-        if browser.find_element_by_xpath('//div[@class="SideContent"]//div[@class="TierRankInfo"]//span[@class="tierRank"]').text == 'Unranked':
+        try:
+            browser.find_element_by_xpath('//div[@class="GameListContainer"]//div[@class="ErrorMessage"]//div[@class="Message"]')
             browser.close()
             browser.quit()
-            return
+        except:
+            print('done')
         # click button
         try:
             browser.find_element_by_xpath('//div[@class="Buttons"]/button[contains(text(),"Check MMR")]').click()
