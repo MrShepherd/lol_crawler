@@ -14,10 +14,10 @@ import htmlparser
 
 class GameIDInfoCrawler(object):
     def __init__(self):
-        self.service_args = ['--proxy=122.96.59.107:843', '--proxy-type=http']
+        # self.service_args = ['--proxy=122.96.59.107:843', '--proxy-type=http']
         # self.service_args = ['--proxy=121.193.143.249:80', '--proxy-type=http']
-        self.browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs', service_args=self.service_args)
-        # self.browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs')
+        # self.browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs', service_args=self.service_args)
+        self.browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs')
         # self.browser = webdriver.Chrome()
         self.browser.set_page_load_timeout(15)
         self.url = 'http://www.op.gg/ranking/ladder/'
@@ -32,9 +32,9 @@ class GameIDInfoCrawler(object):
 
     def page_generator(self, url):
         self.failed_downloaded_page_urls.remove(url)
-        service_args = ['--proxy=122.96.59.107:843', '--proxy-type=http']
-        browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs', service_args=service_args)
-        # browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs')
+        # service_args = ['--proxy=122.96.59.107:843', '--proxy-type=http']
+        # browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs', service_args=service_args)
+        browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs')
         # browser = webdriver.Chrome()
         browser.set_page_load_timeout(15)
         print('getting:', url)
@@ -47,7 +47,7 @@ class GameIDInfoCrawler(object):
         try:
             browser.find_element_by_xpath('//div[@class="Buttons"]/button[contains(text(),"Check MMR")]').click()
             WebDriverWait(browser, 120).until(EC.presence_of_element_located((By.ID, 'ExtraView')))
-            if browser.find_element_by_xpath('//div[@class="ExtraView"]//div[@class="SummonerExtraMessage"]//div[@class="Message"]'):
+            if browser.find_element_by_xpath('//div[@id="ExtraView"]//div[@class="SummonerExtraMessage"]//div[@class="Message"]'):
                 return
         except NoSuchElementException:
             try:
