@@ -10,12 +10,13 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 import htmlparser
+import json
 
 
 class GameIDInfoCrawler(object):
     def __init__(self):
         # self.service_args = ['--proxy=122.96.59.107:843', '--proxy-type=http']
-        # self.service_args = ['--proxy=121.193.143.249:80', '--proxy-type=http']
+        # self.service_args = ['--proxy=210.101.131.229:8080', '--proxy-type=http']
         # self.browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs', service_args=self.service_args)
         self.browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs')
         # self.browser = webdriver.Chrome()
@@ -27,12 +28,15 @@ class GameIDInfoCrawler(object):
         self.pages = []
         self.failed_parsed_pages = []
         self.gameid_data = []
-        self.id_mapping = set()
+        self.id_mapping = []
         self.img_path = 'img/gameid/'
+        self.pages_json = {}
+        self.pages_json_file = "pages.json"
 
     def page_generator(self, url):
         self.failed_downloaded_page_urls.remove(url)
         # service_args = ['--proxy=122.96.59.107:843', '--proxy-type=http']
+        # service_args = ['--proxy=210.101.131.229:8080', '--proxy-type=http']
         # browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs', service_args=service_args)
         browser = webdriver.PhantomJS(executable_path='/opt/phantomjs/bin/phantomjs')
         # browser = webdriver.Chrome()
@@ -48,6 +52,8 @@ class GameIDInfoCrawler(object):
             browser.find_element_by_xpath('//div[@class="Buttons"]/button[contains(text(),"Check MMR")]').click()
             WebDriverWait(browser, 120).until(EC.presence_of_element_located((By.ID, 'ExtraView')))
             if browser.find_element_by_xpath('//div[@id="ExtraView"]//div[@class="SummonerExtraMessage"]//div[@class="Message"]'):
+                browser.close()
+                browser.quit()
                 return
         except NoSuchElementException:
             try:
@@ -141,9 +147,10 @@ class GameIDInfoCrawler(object):
             print('append:', tmp_full_link)
             self.page_urls.add(tmp_full_link)
         print('length of url appended:', len(self.page_urls))
+        self.page_urls.remove('http://www.op.gg/summoner/userName=%ED%98%B8%EC%82%B0%EC%9D%B4%EB%A7%8C%EB%82%98%EB%A9%B4%ED%8A%B8%EB%A1%A4')
         self.failed_downloaded_page_urls = self.page_urls
         while len(self.failed_downloaded_page_urls) != 0:
-            pool = Pool(8)
+            pool = Pool(16)
             pool.map(self.page_generator, self.failed_downloaded_page_urls)
             pool.close()
             pool.join()
@@ -175,7 +182,7 @@ class GameIDInfoCrawler(object):
             tmp_dict['mmr'] = soup.find('div', id='ExtraView').find('td', class_='MMR').get_text().replace(',', '').strip()
             tmp_dict['twentywin'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioTitle').get_text().split()[1].replace('W', '')
             tmp_dict['twentylose'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioTitle').get_text().split()[2].replace('L', '')
-            tmp_dict['twentywinratio'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioText').get_text().replace('%', '').replace('%', '')
+            tmp_dict['twentywinratio'] = soup.find('div', class_='GameAverageStats').find('div', class_='WinRatioText').get_text().replace('%', '')
             tmp_dict['twentyavgkill'] = soup.find('div', class_='GameAverageStats').find('span', class_='Kill').get_text()
             tmp_dict['twentyavgdeath'] = soup.find('div', class_='GameAverageStats').find('span', class_='Death').get_text()
             tmp_dict['twentyavgassist'] = soup.find('div', class_='GameAverageStats').find('span', class_='Assist').get_text()
@@ -187,7 +194,7 @@ class GameIDInfoCrawler(object):
                 tmp_dict_2['player_team'] = soup.find('div', class_='Information').find('div', class_='Team').get_text().strip().split('\n')[0]
                 tmp_dict_2['player_name'] = soup.find('div', class_='Information').find('span', class_='Name').get_text().replace('[', '').replace(']', '').upper()
                 tmp_dict_2['game_id'] = tmp_dict['game_id']
-                self.id_mapping.add(tmp_dict_2)
+                self.id_mapping.append(tmp_dict_2)
         except Exception as e:
             print('failed:', url)
             print(e)
@@ -198,9 +205,12 @@ class GameIDInfoCrawler(object):
 
     def crawl_gameid_info(self):
         self.failed_parsed_pages = self.pages
+        self.pages_json = {'data': self.pages}
+        with open(self.pages_json_file, 'w') as fwrite:
+            json.dump(self.pages_json, fwrite)
         self.pages = []
         while len(self.failed_parsed_pages) != 0:
-            pool = Pool(8)
+            pool = Pool(16)
             pool.map(self.parse_gameid_info, self.failed_parsed_pages)
             pool.close()
             pool.join()
