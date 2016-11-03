@@ -32,6 +32,7 @@ class GameIDInfoCrawler(object):
         self.img_path = 'img/gameid/'
         self.pages_json = {}
         self.pages_json_file = "pages.json"
+        self.fix_flag = 'no'
 
     def page_generator(self, url):
         self.failed_downloaded_page_urls.remove(url)
@@ -50,7 +51,7 @@ class GameIDInfoCrawler(object):
         # click button
         try:
             browser.find_element_by_xpath('//div[@class="Buttons"]/button[contains(text(),"Check MMR")]').click()
-            WebDriverWait(browser, 120).until(EC.presence_of_element_located((By.ID, 'ExtraView')))
+            WebDriverWait(browser, 60).until(EC.presence_of_element_located((By.ID, 'ExtraView')))
             if browser.find_element_by_xpath('//div[@id="ExtraView"]//div[@class="SummonerExtraMessage"]//div[@class="Message"]'):
                 browser.close()
                 browser.quit()
@@ -62,7 +63,7 @@ class GameIDInfoCrawler(object):
                 except TimeoutException:
                     browser.execute_script('window.stop()')
                 browser.find_element_by_xpath('//div[@class="Buttons"]/button[contains(text(),"Check MMR")]').click()
-                WebDriverWait(browser, 120).until(EC.presence_of_element_located((By.ID, 'ExtraView')))
+                WebDriverWait(browser, 60).until(EC.presence_of_element_located((By.ID, 'ExtraView')))
             except NoSuchElementException:
                 self.failed_downloaded_page_urls.add(url)
                 browser.close()
@@ -81,7 +82,7 @@ class GameIDInfoCrawler(object):
         # click link
         try:
             browser.find_element_by_xpath('//div[@class="RealContent"]//li[@data-type="ranked"]/a').click()
-            WebDriverWait(browser, 120).until(EC.presence_of_element_located((By.ID, 'WinRatioSparkline')))
+            WebDriverWait(browser, 60).until(EC.presence_of_element_located((By.ID, 'WinRatioSparkline')))
         except NoSuchElementException:
             try:
                 try:
@@ -89,7 +90,7 @@ class GameIDInfoCrawler(object):
                 except TimeoutException:
                     browser.execute_script('window.stop()')
                 browser.find_element_by_xpath('//div[@class="RealContent"]//li[@data-type="ranked"]/a').click()
-                WebDriverWait(browser, 120).until(EC.presence_of_element_located((By.ID, 'WinRatioSparkline')))
+                WebDriverWait(browser, 60).until(EC.presence_of_element_located((By.ID, 'WinRatioSparkline')))
             except NoSuchElementException:
                 self.failed_downloaded_page_urls.add(url)
                 browser.close()
@@ -147,7 +148,6 @@ class GameIDInfoCrawler(object):
             print('append:', tmp_full_link)
             self.page_urls.add(tmp_full_link)
         print('length of url appended:', len(self.page_urls))
-        self.page_urls.remove('http://www.op.gg/summoner/userName=%ED%98%B8%EC%82%B0%EC%9D%B4%EB%A7%8C%EB%82%98%EB%A9%B4%ED%8A%B8%EB%A1%A4')
         self.failed_downloaded_page_urls = self.page_urls
         while len(self.failed_downloaded_page_urls) != 0:
             pool = Pool(16)
@@ -155,6 +155,9 @@ class GameIDInfoCrawler(object):
             pool.close()
             pool.join()
         print('number of pages downloaded:', len(self.pages))
+        self.pages_json = {'data': self.pages}
+        with open(self.pages_json_file, 'w') as fwrite:
+            json.dump(self.pages_json, fwrite)
 
     def parse_gameid_info(self, page):
         base_url = 'http://www.op.gg/summoner/'
@@ -168,7 +171,7 @@ class GameIDInfoCrawler(object):
             print('game_id:', tmp_dict['game_id'])
             tmp_dict['link'] = parse.urljoin(base_url, 'userName=' + tmp_dict['game_id'])
             print('link:', tmp_dict['link'])
-            tmp_dict['rank'] = soup.find('div', class_='Rank').find('a').find('span').get_text()
+            tmp_dict['rank'] = soup.find('div', class_='Rank').find('a').find('span').get_text().replace(',', '')
             link = 'http:' + soup.find('div', class_='Face').find('img').get('src')
             print('img link:', link)
             if not os.path.exists(self.img_path):
@@ -188,26 +191,31 @@ class GameIDInfoCrawler(object):
             tmp_dict['twentyavgassist'] = soup.find('div', class_='GameAverageStats').find('span', class_='Assist').get_text()
             tmp_dict['twentyavgkda'] = soup.find('div', class_='KDARatio').find('span', class_='KDARatio').get_text().split(':')[0]
             tmp_dict['twentyavgck'] = soup.find('div', class_='KDARatio').find('span', class_='CKRate').get_text().split()[2].replace(')', '').replace('%', '')
-            self.gameid_data.append(tmp_dict)
             tmp_dict_2 = {}
             if soup.find('div', class_='Information').find('div', class_='Team') is not None:
                 tmp_dict_2['player_team'] = soup.find('div', class_='Information').find('div', class_='Team').get_text().strip().split('\n')[0]
                 tmp_dict_2['player_name'] = soup.find('div', class_='Information').find('span', class_='Name').get_text().replace('[', '').replace(']', '').upper()
                 tmp_dict_2['game_id'] = tmp_dict['game_id']
                 self.id_mapping.append(tmp_dict_2)
+            self.gameid_data.append(tmp_dict)
         except Exception as e:
             print('failed:', url)
             print(e)
-            if soup.find('div', class_='SummonerNotFoundLayout') is not None:
-                return
-            self.failed_downloaded_page_urls.add(url)
-            self.failed_parsed_pages.append(self.page_generator(url))
+            try:
+                if soup.find('div', class_='SummonerNotFoundLayout') is not None:
+                    return
+                if soup.find('div', class_='SideContent').find('span', class_='tierRank').get_text() == 'Unranked':
+                    return
+            except:
+                self.failed_downloaded_page_urls.add(url)
+                self.failed_parsed_pages.append(self.page_generator(url))
 
     def crawl_gameid_info(self):
-        self.failed_parsed_pages = self.pages
-        self.pages_json = {'data': self.pages}
-        with open(self.pages_json_file, 'w') as fwrite:
-            json.dump(self.pages_json, fwrite)
+        if self.fix_flag == 'no':
+            self.failed_parsed_pages = self.pages
+        elif self.fix_flag == 'yes':
+            with open(self.pages_json_file, 'r') as fread:
+                self.failed_parsed_pages = json.load(fread)['data']
         self.pages = []
         while len(self.failed_parsed_pages) != 0:
             pool = Pool(16)

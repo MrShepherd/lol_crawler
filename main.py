@@ -31,10 +31,25 @@ if __name__ == '__main__':
         print('start to save player data to db')
         db_handler.save_data(player_data, Player)
         crawler.close()
-    if 'daily' in sys.argv:
+    if 'daily' in sys.argv and 'fix' not in sys.argv:
         crawler = gameid_info_crawler.GameIDInfoCrawler()
         crawler.page_collector()
         print('second %s: collecting pages finished' % (str(time.time() - time_start)))
+        gameid_data, id_mapping = crawler.crawl_gameid_info()
+        print('second %s: parsing pages finished' % (str(time.time() - time_start)))
+        print('length of game id data list:', len(gameid_data))
+        print('game id data:\n', gameid_data)
+        print('start to save player data to db')
+        db_handler.save_data(gameid_data, GameIDInfo)
+        print('length of id maping list:', len(id_mapping))
+        print('id mapping data:\n', id_mapping)
+        print('start to save player data to db')
+        db_handler.save_data(id_mapping, IDMapping)
+        db_handler.update_summary()
+        crawler.close()
+    if 'daily' in sys.argv and 'fix' in sys.argv:
+        crawler = gameid_info_crawler.GameIDInfoCrawler()
+        crawler.fix_flag = 'yes'
         gameid_data, id_mapping = crawler.crawl_gameid_info()
         print('second %s: parsing pages finished' % (str(time.time() - time_start)))
         print('length of game id data list:', len(gameid_data))

@@ -35,7 +35,7 @@ class DBHandler(object):
         session = self.DBSession()
         sql = '''
         insert into summary
-        select
+        select DISTINCT
         COALESCE(c.player_name,'路人') as 'player_name'
         ,COALESCE(c.player_country,'unknown') as 'player_country'
         ,COALESCE(c.player_team_short_name,'路人') as 'player_team_short_name'
