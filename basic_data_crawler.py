@@ -85,7 +85,8 @@ class TeamDataCrawler(object):
         for page in self.teampages:
             soup = htmlparser.HtmlParser(page).get_soup()
             img_link = soup.find('div', {'id': 'teamranking_middle_team_detail'}).find('img').get('src')
-            img_name = soup.find('div', {'id': 'teamranking_middle_team_detail'}).find('img').get('alt') + '.png'
+            img_team = soup.find('div', {'id': 'teamranking_middle_team_detail'}).find('span').get_text()
+            img_name = img_team + '.png'
             print('saving team img:', img_link)
             request.urlretrieve(img_link, self.img_path + '/team/' + img_name)
         return 'ok'
