@@ -1,7 +1,7 @@
 import time
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Summary
+from models import Summary, IDMappingManual
 
 
 class DBHandler(object):
@@ -29,6 +29,26 @@ class DBHandler(object):
                 print(e)
                 continue
 
+    def get_idmappingmanual_gameid(self):
+        session = self.DBSession()
+        gameids = session.query(IDMappingManual.game_id).filter(IDMappingManual.enable == 1).all()
+        tmplist = []
+        for gameid in gameids:
+            tmplist.append(gameid[0])
+        session.close()
+        return tmplist
+
+    def update_idmapping_manual(self):
+        session = self.DBSession()
+        sql = '''
+        INSERT into idmappingmanual(player_name,player_team,game_id,enable)
+        SELECT player_name,player_team,game_id,0 from idmapping
+        where game_id not in (select game_id from idmappingmanual);
+        '''
+        session.execute(sql)
+        session.commit()
+        session.close()
+
     def update_summary(self):
         self.initial_table(Summary)
         time.sleep(10)
@@ -43,7 +63,7 @@ class DBHandler(object):
         ,COALESCE(c.player_place,'路人') as 'player_place'
         ,a.*
         from gameidinfo a
-        left join idmapping b
+        left join idmappingmanual b
         on a.game_id=b.game_id
         left JOIN
         (
@@ -54,6 +74,8 @@ class DBHandler(object):
         ) c
         on b.player_name=c.player_name
         ;
+        update summary set player_team_short_name='' WHERE player_team_short_name='路人';
+        update summary set player_country='' where player_country='unknown';
         '''
         print('update summary')
         session.execute(sql)

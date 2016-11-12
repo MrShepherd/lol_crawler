@@ -8,7 +8,7 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-
+import dbhandler
 import htmlparser
 import json
 
@@ -23,6 +23,7 @@ class GameIDInfoCrawler(object):
         self.browser.set_page_load_timeout(15)
         self.url = 'http://www.op.gg/ranking/ladder/'
         self.pro_url = 'http://www.op.gg/spectate/list/'
+        self.base_url = 'http://www.op.gg/summoner/'
         self.page_urls = set()
         self.failed_downloaded_page_urls = set()
         self.pages = []
@@ -147,7 +148,13 @@ class GameIDInfoCrawler(object):
             tmp_full_link = parse.urljoin(self.url, tmp_link)
             print('append:', tmp_full_link)
             self.page_urls.add(tmp_full_link)
+        db_handler = dbhandler.DBHandler()
+        gameids = db_handler.get_idmappingmanual_gameid()
         print('length of url appended:', len(self.page_urls))
+        for gameid in gameids:
+            tmp_full_link = parse.urljoin(self.base_url, 'userName=' + gameid)
+            print('append:', tmp_full_link)
+            self.page_urls.add(tmp_full_link)
         self.failed_downloaded_page_urls = self.page_urls
         while len(self.failed_downloaded_page_urls) != 0:
             pool = Pool(16)
@@ -160,7 +167,6 @@ class GameIDInfoCrawler(object):
             json.dump(self.pages_json, fwrite)
 
     def parse_gameid_info(self, page):
-        base_url = 'http://www.op.gg/summoner/'
         print('number of pages failed to parse:', len(self.failed_parsed_pages))
         self.failed_parsed_pages.remove(page)
         tmp_dict = {}
@@ -169,7 +175,7 @@ class GameIDInfoCrawler(object):
         try:
             tmp_dict['game_id'] = soup.find('div', class_='Profile').find_all('span', class_='Name')[-1].get_text()
             print('game_id:', tmp_dict['game_id'])
-            tmp_dict['link'] = parse.urljoin(base_url, 'userName=' + tmp_dict['game_id'])
+            tmp_dict['link'] = parse.urljoin(self.base_url, 'userName=' + tmp_dict['game_id'])
             print('link:', tmp_dict['link'])
             tmp_dict['rank'] = soup.find('div', class_='Rank').find('a').find('span').get_text().replace(',', '')
             link = 'http:' + soup.find('div', class_='Face').find('img').get('src')

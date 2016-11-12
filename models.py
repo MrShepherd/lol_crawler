@@ -40,6 +40,18 @@ class IDMapping(Base):
         return '<IDMapping %r>' % self.game_id
 
 
+class IDMappingManual(Base):
+    __tablename__ = 'idmappingmanual'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    player_team = Column(String(50))
+    player_name = Column(String(100))
+    game_id = Column(String(100))
+    enable = Column(Integer, default=0)
+
+    def __repr__(self):
+        return '<IDMappingManual %r>' % self.game_id
+
+
 class GameIDInfo(Base):
     __tablename__ = 'gameidinfo'
     game_id = Column(String(100), primary_key=True)
