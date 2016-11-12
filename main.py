@@ -60,6 +60,7 @@ if __name__ == '__main__':
         print('id mapping data:\n', id_mapping)
         print('start to save player data to db')
         db_handler.save_data(id_mapping, IDMapping)
+        db_handler.update_idmapping_manual()
         db_handler.update_summary()
         crawler.close()
     if 'test' in sys.argv:
