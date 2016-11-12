@@ -74,10 +74,14 @@ class DBHandler(object):
         ) c
         on b.player_name=c.player_name
         ;
-        update summary set player_team_short_name='' WHERE player_team_short_name='路人';
-        update summary set player_country='' where player_country='unknown';
         '''
-        print('update summary')
         session.execute(sql)
         session.commit()
+        sql = '''update summary set player_team_short_name='' WHERE player_team_short_name='路人';'''
+        session.execute(sql)
+        session.commit()
+        sql = '''update summary set player_country='' where player_country='unknown';'''
+        session.execute(sql)
+        session.commit()
+        print('update summary')
         session.close()

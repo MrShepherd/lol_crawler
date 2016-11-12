@@ -63,7 +63,9 @@ if __name__ == '__main__':
         db_handler.update_summary()
         crawler.close()
     if 'test' in sys.argv:
-        db_handler.update_summary()
+        # db_handler.update_idmapping_manual()
+        # db_handler.update_summary()
+        print(db_handler.get_idmappingmanual_gameid())
     if 'basic' not in sys.argv and 'daily' not in sys.argv and 'test' not in sys.argv:
         print('wrong argument')
     print('end in %s seconds' % (str(time.time() - time_start)))
