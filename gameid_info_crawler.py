@@ -25,6 +25,7 @@ class GameIDInfoCrawler(object):
         self.pro_url = 'http://www.op.gg/spectate/list/'
         self.base_url = 'http://www.op.gg/summoner/'
         self.page_urls = set()
+        self.page_url_download_times = {}
         self.failed_downloaded_page_urls = set()
         self.pages = []
         self.failed_parsed_pages = []
@@ -36,6 +37,10 @@ class GameIDInfoCrawler(object):
         self.fix_flag = 'no'
 
     def page_generator(self, url):
+        self.page_url_download_times[url] += 1
+        if self.page_url_download_times[url] == 5:
+            self.failed_downloaded_page_urls.remove(url)
+            return
         self.failed_downloaded_page_urls.remove(url)
         # service_args = ['--proxy=122.96.59.107:843', '--proxy-type=http']
         # service_args = ['--proxy=210.101.131.229:8080', '--proxy-type=http']
@@ -156,6 +161,8 @@ class GameIDInfoCrawler(object):
             print('append:', tmp_full_link)
             self.page_urls.add(tmp_full_link)
         self.failed_downloaded_page_urls = self.page_urls
+        for url in self.failed_downloaded_page_urls:
+            self.page_url_download_times[url] = 1
         while len(self.failed_downloaded_page_urls) != 0:
             pool = Pool(24)
             pool.map(self.page_generator, self.failed_downloaded_page_urls)
