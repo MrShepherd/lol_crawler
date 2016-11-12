@@ -157,7 +157,7 @@ class GameIDInfoCrawler(object):
             self.page_urls.add(tmp_full_link)
         self.failed_downloaded_page_urls = self.page_urls
         while len(self.failed_downloaded_page_urls) != 0:
-            pool = Pool(16)
+            pool = Pool(24)
             pool.map(self.page_generator, self.failed_downloaded_page_urls)
             pool.close()
             pool.join()
